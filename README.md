@@ -36,5 +36,11 @@ Bước 1 - Cấu hình:Nhập số lượng đỉnh (VD: 10, 15...).Nhập đ�
 ├── README.md         # Tài liệu hướng dẫn này
 └── images/           # Thư mục chứa ảnh demo
     └── demo_result.png
-🧠 Giải Thích Thuật Toán (Degree Reduction)Chương trình hoạt động theo các bước sau:Khởi tạo: Tính bậc (số cạnh nối) của tất cả các đỉnh.Lặp: Tìm đỉnh có bậc lớn nhất trong số các đỉnh chưa tô màu.Tô màu: Gán màu hợp lệ đầu tiên trong danh sách màu đã chọn (không trùng với hàng xóm).Hạ bậc: Sau khi tô xong đỉnh $U$, giảm bậc của tất cả các hàng xóm của $U$ đi 1.Quay lại bước 2 cho đến khi tất cả các đỉnh đều có màu.
+🧠 Giải Thích Thuật Toán (Degree Reduction)
+Chương trình hoạt động theo các bước sau:
+Khởi tạo: Tính bậc (số cạnh nối) của tất cả các đỉnh.
+Lặp: Tìm đỉnh có bậc lớn nhất trong số các đỉnh chưa tô màu.
+Tô màu: Gán màu hợp lệ đầu tiên trong danh sách màu đã chọn (không trùng với hàng xóm).
+Hạ bậc: Sau khi tô xong đỉnh $U$, giảm bậc của tất cả các hàng xóm của $U$ đi 1.
+Quay lại bước 2 cho đến khi tất cả các đỉnh đều có màu.
 Tác giả: [Nguyễn Thị Ngọc-2001230571]
