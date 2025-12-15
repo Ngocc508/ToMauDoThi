@@ -2,15 +2,9 @@ import networkx as nx
 import numpy as np
 
 def tao_do_thi_ngau_nhien(n, p):
-    """
-    Tạo đồ thị ngẫu nhiên.
-    Input: n (số đỉnh), p (xác suất nối).
-    Output: Graph object, danh sách tên đỉnh, Ma trận kề.
-    """
-    # Tạo đồ thị ngẫu nhiên Erdos-Renyi
+
     G = nx.erdos_renyi_graph(n, p)
-    
-    # Đổi tên đỉnh từ 0,1,2 sang N0, N1, N2
+
     mapping = {i: f"N{i}" for i in range(n)}
     G = nx.relabel_nodes(G, mapping)
     
@@ -21,12 +15,7 @@ def tao_do_thi_ngau_nhien(n, p):
     return G, nodes, matrix
 
 def giai_thuat_to_mau_ha_bac(nodes, G_matrix, palette):
-    """
-    Thuật toán tô màu theo lý thuyết:
-    1. Chọn đỉnh bậc lớn nhất (trong các đỉnh chưa tô).
-    2. Tô màu.
-    3. Hạ bậc các đỉnh hàng xóm.
-    """
+
     num_vertices = len(nodes)
     
     # Mapping tên đỉnh -> index
@@ -64,8 +53,7 @@ def giai_thuat_to_mau_ha_bac(nodes, G_matrix, palette):
             if G_matrix[u_idx][v_idx] == 1 and colored_status[v_idx]:
                 neighbor_name = nodes[v_idx]
                 forbidden_colors.add(solution[neighbor_name])
-        
-        # Chọn màu đầu tiên trong bảng màu không bị cấm
+
         assigned_color = 'gray' # Mặc định nếu thiếu màu
         for color in palette:
             if color not in forbidden_colors:
