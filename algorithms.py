@@ -1,11 +1,13 @@
-import networkx as nx # pyright: ignore[reportMissingModuleSource]
+import networkx as nx
 import numpy as np
 
 def tao_do_thi_ngau_nhien(n, p):
     """
-    Tạo đồ thị ngẫu nhiên Erdos-Renyi.
-    Trả về: (graph_object, nodes_list, adjacency_matrix)
+    Tạo đồ thị ngẫu nhiên.
+    Input: n (số đỉnh), p (xác suất nối).
+    Output: Graph object, danh sách tên đỉnh, Ma trận kề.
     """
+    # Tạo đồ thị ngẫu nhiên Erdos-Renyi
     G = nx.erdos_renyi_graph(n, p)
     
     # Đổi tên đỉnh từ 0,1,2 sang N0, N1, N2
@@ -13,65 +15,72 @@ def tao_do_thi_ngau_nhien(n, p):
     G = nx.relabel_nodes(G, mapping)
     
     nodes = list(G.nodes())
-    # Chuyển sang ma trận kề (list of lists) để thuật toán tô màu xử lý
+    # Chuyển sang ma trận kề dạng list
     matrix = nx.to_numpy_array(G).astype(int).tolist()
     
     return G, nodes, matrix
 
-def tao_do_thi_luoi(side):
+def giai_thuat_to_mau_ha_bac(nodes, G_matrix, palette):
     """
-    Tạo đồ thị dạng lưới (Grid).
-    Trả về: (graph_object, nodes_list, adjacency_matrix)
+    Thuật toán tô màu theo lý thuyết:
+    1. Chọn đỉnh bậc lớn nhất (trong các đỉnh chưa tô).
+    2. Tô màu.
+    3. Hạ bậc các đỉnh hàng xóm.
     """
-    G = nx.grid_2d_graph(side, side)
+    num_vertices = len(nodes)
     
-    # Đổi tên đỉnh từ (0,1) sang string "0,1"
-    mapping = {node: f"{node[0]},{node[1]}" for node in G.nodes()}
-    G = nx.relabel_nodes(G, mapping)
+    # Mapping tên đỉnh -> index
+    t_ = {nodes[i]: i for i in range(num_vertices)}
+
+    # Tính bậc ban đầu
+    current_degrees = [sum(G_matrix[i]) for i in range(num_vertices)]
     
-    nodes = list(G.nodes())
-    matrix = nx.to_numpy_array(G).astype(int).tolist()
-    
-    return G, nodes, matrix
+    colored_status = [False] * num_vertices # Đánh dấu đỉnh đã tô
+    solution = {} # Lưu kết quả {Tên đỉnh: Màu}
+    count_colored = 0
 
-def thuc_hien_to_mau(nodes, G_matrix, list_colors):
-    """
-    Thuật toán Greedy tô màu kết hợp lan truyền ràng buộc.
-    Trả về: dictionary {Tên đỉnh: Tên màu}
-    """
-    n = len(nodes)
-    t_ = {nodes[i]: i for i in range(n)} # Map tên đỉnh -> index
+    # VÒNG LẶP CHÍNH
+    while count_colored < num_vertices:
+        
+        # --- BƯỚC 1: Chọn đỉnh có bậc lớn nhất trong các đỉnh chưa tô ---
+        max_degree = -1
+        u_idx = -1
+        
+        for i in range(num_vertices):
+            if not colored_status[i]:
+                if current_degrees[i] > max_degree:
+                    max_degree = current_degrees[i]
+                    u_idx = i
+        
+        if u_idx == -1: break # Đã tô hết
 
-    # 1. Tính bậc của các đỉnh
-    degree = [sum(G_matrix[i]) for i in range(n)]
+        u_name = nodes[u_idx]
 
-    # 2. Khởi tạo miền giá trị (Domain) cho mỗi đỉnh
-    colorDict = {node: list(list_colors) for node in nodes}
+        # --- BƯỚC 2: Tô màu ---
+        # Tìm các màu bị cấm (do hàng xóm đã tô)
+        forbidden_colors = set()
+        for v_idx in range(num_vertices):
+            # Nếu là hàng xóm VÀ hàng xóm đã tô màu
+            if G_matrix[u_idx][v_idx] == 1 and colored_status[v_idx]:
+                neighbor_name = nodes[v_idx]
+                forbidden_colors.add(solution[neighbor_name])
+        
+        # Chọn màu đầu tiên trong bảng màu không bị cấm
+        assigned_color = 'gray' # Mặc định nếu thiếu màu
+        for color in palette:
+            if color not in forbidden_colors:
+                assigned_color = color
+                break
+        
+        solution[u_name] = assigned_color
+        colored_status[u_idx] = True
+        count_colored += 1
 
-    # 3. Sắp xếp các đỉnh theo bậc giảm dần (Heuristic)
-    indexed_degree = sorted([(i, degree[i]) for i in range(n)], key=lambda x: x[1], reverse=True)
-    sortedNode = [nodes[x[0]] for x in indexed_degree]
+        # --- BƯỚC 3: Hạ bậc ---
+        current_degrees[u_idx] = -1 
 
-    solution = {}
-
-    # 4. Duyệt và tô màu
-    for u in sortedNode:
-        # Nếu không còn màu nào hợp lệ
-        if not colorDict[u]:
-            solution[u] = 'white' # Đánh dấu lỗi
-            continue
-
-        # Chọn màu đầu tiên hợp lệ (Greedy)
-        chosen_color = colorDict[u][0]
-        solution[u] = chosen_color
-
-        # Lan truyền ràng buộc (Constraint Propagation)
-        # Loại bỏ màu vừa chọn khỏi miền giá trị của các đỉnh kề
-        u_idx = t_[u]
-        for v_idx in range(n):
-            if G_matrix[u_idx][v_idx] == 1: # Nếu kề nhau
-                v_name = nodes[v_idx]
-                if chosen_color in colorDict[v_name]:
-                    colorDict[v_name].remove(chosen_color)
-                    
+        for v_idx in range(num_vertices):
+            if G_matrix[u_idx][v_idx] == 1 and not colored_status[v_idx]:
+                current_degrees[v_idx] -= 1
+                
     return solution
